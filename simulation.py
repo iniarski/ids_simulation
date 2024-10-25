@@ -3,11 +3,10 @@ import math
 import matplotlib.pyplot as plt
 from sklearn.metrics import ConfusionMatrixDisplay, accuracy_score, precision_score, recall_score, f1_score
 
-
 import model_data
 
 default_config = {
-    'n_samples': 100000,
+    'n_samples': 1000000,
     'attack_rate': 0.5,
     'detection_threshold': 0.5,
     'n_classes': 6,
@@ -15,11 +14,8 @@ default_config = {
 }
 
 example_models = [
-    model_data.binary995,
-    model_data.binary99,
-    model_data.binary99,
-    model_data.multiclass95,
-    model_data.multiclass95,
+    model_data.binary95,
+    model_data.binary95,
     model_data.multiclass95,
 ]
 
@@ -94,7 +90,7 @@ def get_multiclass_outputs(multiclass_models : list[dict], sample : int, sample_
     ]
     return multiclass_outputs
 
-def simulate(models : list[dict], config: dict = default_config, print_outputs : bool = False) -> None:
+def simulate(models : list[dict], config: dict = default_config, print_outputs : bool = False, weighted_avg : bool = True) -> None:
     n_samples = config['n_samples']
     attack_rate = config['attack_rate']
     detection_threshold = config['detection_threshold']
@@ -113,14 +109,20 @@ def simulate(models : list[dict], config: dict = default_config, print_outputs :
             multiclass_models.append(model)
 
     if len(binary_models) > 0:
-        binary_weights = list(map(lambda model : get_model_weight(model), binary_models))
-        weights_sum = sum(binary_weights)
-        binary_weights = [weight / weights_sum for weight in binary_weights]
+        if weighted_avg:
+            binary_weights = list(map(lambda model : get_model_weight(model), binary_models))
+            weights_sum = sum(binary_weights)
+            binary_weights = [weight / weights_sum for weight in binary_weights]
+        else:
+            binary_weights = len(binary_models) * [ 1 / len(binary_models)]
 
     if len(multiclass_models) > 0:
-        multiclass_weights = list(map(lambda model : get_model_weight(model), multiclass_models))
-        weights_sum = sum(multiclass_weights)
-        multiclass_weights = [weight / weights_sum for weight in multiclass_weights]
+        if weighted_avg:
+            multiclass_weights = list(map(lambda model : get_model_weight(model), multiclass_models))
+            weights_sum = sum(multiclass_weights)
+            multiclass_weights = [weight / weights_sum for weight in multiclass_weights]
+        else:
+            multiclass_weights = len(multiclass_models) * [ 1 / len(multiclass_models)]
 
     samples = [generate_sample(attack_rate, attack_distribution) for _ in range(n_samples)]
     samples_xs = [random.random() for _ in range(n_samples)]
