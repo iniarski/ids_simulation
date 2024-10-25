@@ -15,8 +15,8 @@ default_config = {
 
 example_models = [
     model_data.binary95,
-    model_data.binary95,
-    model_data.multiclass95,
+    model_data.binary97,
+    model_data.multiclass98,
 ]
 
 def print_classification_metrics(y_true, y_pred, average='binary'):
@@ -90,7 +90,7 @@ def get_multiclass_outputs(multiclass_models : list[dict], sample : int, sample_
     ]
     return multiclass_outputs
 
-def simulate(models : list[dict], config: dict = default_config, print_outputs : bool = False, weighted_avg : bool = True) -> None:
+def simulate(models : list[dict], config: dict = default_config, print_outputs : bool = False, weighted_avg : bool = True, show_plot : bool = False) -> None:
     n_samples = config['n_samples']
     attack_rate = config['attack_rate']
     detection_threshold = config['detection_threshold']
@@ -139,8 +139,10 @@ def simulate(models : list[dict], config: dict = default_config, print_outputs :
             for m in mult_out:
                 print(m)
 
-    best_binary_id = binary_weights.index(max(binary_weights))
-    best_multiclass_id = multiclass_weights.index(max(multiclass_weights))
+    binary_qualities = list(map(lambda model: sum(model['recalls']), binary_models))
+    multiclass_qualities = list(map(lambda model: sum(model['recalls']), multiclass_models))
+    best_binary_id = binary_qualities.index(max(binary_qualities))
+    best_multiclass_id = multiclass_qualities.index(max(multiclass_qualities))
 
     combined_binary_predictions = n_samples * [0]
     combined_multiclass_predictions = n_samples * [0]
@@ -156,7 +158,7 @@ def simulate(models : list[dict], config: dict = default_config, print_outputs :
         best_binary_predictions[i] = 1 if bin_out[best_binary_id] > detection_threshold else 0
 
         if combined_binary_predictions[i] == 0:
-            combined_binary_predictions[i] == 0
+            combined_multiclass_predictions[i] == 0
         else:
             weighted_mult_out = (n_classes - 1) * [0]
             for mo, weight in zip(mult_out, multiclass_weights):
@@ -179,22 +181,26 @@ def simulate(models : list[dict], config: dict = default_config, print_outputs :
     ConfusionMatrixDisplay.from_predictions(binarized_samples, combined_binary_predictions)
     print("Combined binary metrics")
     print_classification_metrics(binarized_samples, combined_binary_predictions)
-    plt.show()
+    if show_plot:
+        plt.show()
     ConfusionMatrixDisplay.from_predictions(binarized_samples, best_binary_predictions)
     print("Best binary metrics")
     print_classification_metrics(binarized_samples, best_binary_predictions)
-    plt.show()
+    if show_plot:
+        plt.show()
     ConfusionMatrixDisplay.from_predictions(samples, combined_multiclass_predictions)
     print("Combined multiclass metrics")
     print_classification_metrics(samples, combined_multiclass_predictions, average='macro')
-    plt.show()
+    if show_plot:
+        plt.show()
     ConfusionMatrixDisplay.from_predictions(samples, best_multiclass_predictions)
     print("Best multiclass metrics")
     print_classification_metrics(samples, best_multiclass_predictions, average='macro')
-    plt.show()
+    if show_plot:
+        plt.show()
 
 def main():
-    simulate(example_models, print_outputs=False)
+    simulate(example_models, print_outputs=False, weighted_avg=False)
 
 if __name__ == '__main__':
     main()

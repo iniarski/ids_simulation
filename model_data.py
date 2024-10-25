@@ -50,7 +50,15 @@ multiclass98 = {
     'n_classes': 6,
     'recalls': [.98, .98, .98, .98, .98, .98],
 }
+multiclass98_5 = {
+    'n_classes': 6,
+    'recalls': [.985, .985, .985, .985, .985, .985],
+}
 multiclass99 = {
     'n_classes': 6,
     'recalls': [.99, .99, .99, .99, .99, .99],
+}
+multiclass99_5 = {
+    'n_classes': 6,
+    'recalls': [.995, .995, .995, .995, .995, .995],
 }
